@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>YouTube Caption Search</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f8f9fa;
+            margin: 0;
+            padding: 0;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 50px auto;
+            padding: 20px;
+            background-color: #ffffff;
+            border-radius: 5px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+
+        h1 {
+            text-align: center;
+            color: #333333;
+        }
+
+        form {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        label {
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+
+        input[type="text"] {
+            padding: 10px;
+            margin-bottom: 10px;
+            border: 1px solid #ced4da;
+            border-radius: 3px;
+            font-size: 16px;
+            width: 100%;
+            max-width: 500px;
+        }
+
+        button {
+            padding: 10px 20px;
+            background-color: #007bff;
+            color: #ffffff;
+            border: none;
+            border-radius: 3px;
+            font-size: 16px;
+            cursor: pointer;
+        }
+
+        button:hover {
+            background-color: #0056b3;
+        }
+
+        #searchResults {
+            margin-top: 20px;
+        }
+
+        #searchResults p {
+            margin-bottom: 5px;
+            line-height: 1.5;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>YouTube Caption Search</h1>
+        <form id="searchForm">
+            <label for="youtubeLink">YouTube Link:</label>
+            <input type="text" id="youtubeLink" name="youtubeLink" required>
+            <button type="button" id="getAllCaptionsBtn">Get All Captions</button>
+            <button type="button" id="searchKeywordsBtn">Search Keywords in Captions</button>
+            <label for="keywords" id="keywordsLabel" style="display:none;">Keywords (comma-separated):</label>
+            <input type="text" id="keywords" name="keywords" style="display:none;">
+            <button type="submit" id="searchSubmitBtn" style="display:none;">Search</button>
+        </form>
+        <div id="searchResults"></div>
+    </div>
+
+    <script>
+        document.getElementById('getAllCaptionsBtn').addEventListener('click', async function() {
+            const youtubeLink = document.getElementById('youtubeLink').value;
+            fetchCaptions(youtubeLink);
+        });
+
+        document.getElementById('searchKeywordsBtn').addEventListener('click', function() {
+            document.getElementById('keywordsLabel').style.display = 'block';
+            document.getElementById('keywords').style.display = 'block';
+            document.getElementById('searchSubmitBtn').style.display = 'block';
+        });
+
+        document.getElementById('searchForm').addEventListener('submit', async function(event) {
+            event.preventDefault();
+            const youtubeLink = document.getElementById('youtubeLink').value;
+            const keywords = document.getElementById('keywords').value;
+            searchKeywords(youtubeLink, keywords);
+        });
+
+        async function fetchCaptions(youtubeLink) {
+            try {
+                const response = await fetch('/captions', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ youtubeLink })
+                });
+
+                const data = await response.json();
+
+                let resultsHTML = '<h2>Captions:</h2>';
+                resultsHTML += `<p>${data}</p>`;
+                document.getElementById('searchResults').innerHTML = resultsHTML;
+            } catch (error) {
+                console.error('Error:', error);
+            }
+        }
+
+        async function searchKeywords(youtubeLink, keywords) {
+            try {
+                const response = await fetch('/search', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ youtubeLink, keywords })
+                });
+
+                const data = await response.json();
+
+                let resultsHTML = '<h2>Search Results:</h2>';
+                for (const keyword in data) {
+                    resultsHTML += `<p>${keyword}: ${data[keyword]}</p>`;
+                }
+                document.getElementById('searchResults').innerHTML = resultsHTML;
+            } catch (error) {
+                console.error('Error:', error);
+            }
+        }
+    </script>
+</body>
+</html>
+
